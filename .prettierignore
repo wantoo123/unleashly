@@ -1,0 +1,17 @@
+.next
+node_modules
+dist
+out
+release
+build
+coverage
+pnpm-lock.yaml
+bun.lock
+*.log
+*.ico
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.svg

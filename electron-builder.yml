@@ -1,0 +1,32 @@
+appId: ai.unleashly.app
+productName: Unleashly
+copyright: Copyright © 2026 Unleashly
+electronDist: node_modules/electron/dist
+directories:
+    output: release
+    buildResources: resources
+files:
+    - out/**/*
+    - package.json
+    - LICENSE
+asar: true
+asarUnpack:
+    - resources/**
+win:
+    target:
+        - nsis
+    artifactName: ${productName}-${version}-${arch}.${ext}
+nsis:
+    oneClick: false
+    allowToChangeInstallationDirectory: true
+    createDesktopShortcut: true
+mac:
+    target:
+        - dmg
+    category: public.app-category.graphics-design
+    artifactName: ${productName}-${version}-${arch}.${ext}
+linux:
+    target:
+        - AppImage
+    category: Graphics
+    artifactName: ${productName}-${version}-${arch}.${ext}
