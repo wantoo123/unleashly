@@ -1,0 +1,69 @@
+name: Release
+
+on:
+    push:
+        tags:
+            - "v*"
+
+permissions:
+    contents: write
+
+concurrency:
+    group: release-${{ github.ref }}
+    cancel-in-progress: false
+
+jobs:
+    windows:
+        runs-on: windows-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 12
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Typecheck
+              run: pnpm typecheck
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
+
+            - name: Run unit tests
+              run: bun test
+
+            - name: Build installer
+              run: pnpm dist
+              env:
+                  CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+            - name: Prepare release notes
+              run: node scripts/release-notes.mjs
+
+            - name: Publish GitHub release
+              shell: pwsh
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  $version = (Get-Content VERSION -Raw).Trim()
+                  $tag = $env:GITHUB_REF_NAME
+                  if (-not $tag) { throw "Release workflow must run from a v* tag" }
+                  $assets = @(
+                    "release/Unleashly-$version-x64.exe",
+                    "release/Unleashly-$version-x64.exe.blockmap",
+                    "release/latest.yml"
+                  )
+                  foreach ($asset in $assets) {
+                    if (-not (Test-Path $asset)) { throw "Missing release asset: $asset" }
+                  }
+                  gh release create $tag $assets --title "Unleashly $version" --notes-file release/release-notes.md
