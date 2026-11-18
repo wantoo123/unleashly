@@ -1,5 +1,6 @@
 import type { AppInfo, FileFilter, OpenFilesResult, ProxyInfo, SaveFileRequest, SaveFileResult, StoragePayload, StorageStats } from "./ipc";
 import type { CrashReportSummary, DiagnosticsExportRequest, DiagnosticsExportResult, DiagnosticsSummary, LogWriteRequest, RendererCrashReport } from "./diagnostics";
+import type { UpdateStatus } from "./updates";
 import type { EnqueueTaskRequest, GatewayChannel, TaskConcurrency, TaskDeltaEvent, TaskListFilter, TaskOpenEvent, TaskRecord, TaskResultPayload, TaskStats } from "./tasks";
 
 export type UnleashlyBridge = {
@@ -49,6 +50,13 @@ export type UnleashlyBridge = {
         openLogs: () => Promise<void>;
         openCrashes: () => Promise<void>;
         reportCrash: (report: RendererCrashReport) => Promise<void>;
+    };
+    updates: {
+        status: () => Promise<UpdateStatus>;
+        check: () => Promise<UpdateStatus>;
+        download: () => Promise<UpdateStatus>;
+        install: () => Promise<void>;
+        onStatus: (callback: (status: UpdateStatus) => void) => () => void;
     };
     tasks: {
         enqueue: (request: EnqueueTaskRequest) => Promise<TaskRecord>;

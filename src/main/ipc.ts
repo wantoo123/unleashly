@@ -14,6 +14,7 @@ import { getProxyUrl } from "./services/local-proxy";
 import { log, scopedLogger } from "./services/logger";
 import { secretVault } from "./services/secret-vault";
 import { getTaskQueue } from "./services/task-service";
+import { checkForUpdates, downloadUpdate, getUpdateStatus, installUpdate } from "./services/updater";
 
 const MAX_OPEN_FILE_BYTES = 512 * 1024 * 1024;
 const TASK_ID_PATTERN = /^task_[A-Za-z0-9-]{8,}$/;
@@ -470,5 +471,25 @@ export function registerIpcHandlers(getWindow: () => BrowserWindow | null) {
                 windowUrl: event.senderFrame?.url || "",
             },
         });
+    });
+
+    ipcMain.handle(IPC.updatesStatus, (event) => {
+        assertTrustedSender(event);
+        return getUpdateStatus();
+    });
+
+    ipcMain.handle(IPC.updatesCheck, async (event) => {
+        assertTrustedSender(event);
+        return checkForUpdates(true);
+    });
+
+    ipcMain.handle(IPC.updatesDownload, async (event) => {
+        assertTrustedSender(event);
+        return downloadUpdate();
+    });
+
+    ipcMain.handle(IPC.updatesInstall, async (event) => {
+        assertTrustedSender(event);
+        await installUpdate();
     });
 }

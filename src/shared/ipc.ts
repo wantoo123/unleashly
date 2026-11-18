@@ -43,6 +43,11 @@ export const IPC = {
     diagnosticsOpenLogs: "diagnostics:open-logs",
     diagnosticsOpenCrashes: "diagnostics:open-crashes",
     diagnosticsReportCrash: "diagnostics:report-crash",
+    updatesStatus: "updates:status",
+    updatesCheck: "updates:check",
+    updatesDownload: "updates:download",
+    updatesInstall: "updates:install",
+    updatesChanged: "updates:changed",
 } as const;
 
 export type IpcChannel = (typeof IPC)[keyof typeof IPC];

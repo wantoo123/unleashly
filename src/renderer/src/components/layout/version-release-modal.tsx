@@ -1,7 +1,8 @@
 import type { CSSProperties } from "react";
-import { Modal, Tag, Timeline } from "antd";
+import { Button, Modal, Progress, Tag, Timeline } from "antd";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
+import { formatBytes } from "@/lib/image-utils";
 import { useVersionCheck } from "@/hooks/use-version-check";
 import { APP_VERSION } from "@/constant/env";
 
@@ -25,7 +26,29 @@ type VersionReleaseModalProps = {
 
 export function VersionReleaseModal({ className, style }: VersionReleaseModalProps) {
     const { t } = useTranslation();
-    const { open, setOpen, openReleaseModal, latestVersion, releases, checking, hasNewVersion, checkLatestRelease } = useVersionCheck();
+    const { open, setOpen, openReleaseModal, latestVersion, releases, checking, hasNewVersion, checkLatestRelease, isDesktopUpdate, updatePhase, updateProgress, updateError, isDownloading, isDownloaded, downloadUpdate, installUpdate } = useVersionCheck();
+    const updateTag =
+        updatePhase === "available" ? (
+            <Tag color="green" className="m-0">
+                {t("version.updateAvailable")}
+            </Tag>
+        ) : updatePhase === "downloading" ? (
+            <Tag color="processing" className="m-0">
+                {t("version.downloading")}
+            </Tag>
+        ) : updatePhase === "downloaded" ? (
+            <Tag color="success" className="m-0">
+                {t("version.downloaded")}
+            </Tag>
+        ) : updatePhase === "not-available" ? (
+            <Tag className="m-0">{t("version.upToDate")}</Tag>
+        ) : updatePhase === "error" ? (
+            <Tag color="error" className="m-0">
+                {t("version.updateError")}
+            </Tag>
+        ) : updatePhase === "disabled" ? (
+            <Tag className="m-0">{t("version.desktopOnly")}</Tag>
+        ) : null;
 
     return (
         <>
@@ -58,9 +81,58 @@ export function VersionReleaseModal({ className, style }: VersionReleaseModalPro
                                 {t(checking ? "version.checking" : "version.checkUpdates")}
                             </button>
                         </div>
-                        <div className="mt-1 text-base font-semibold text-stone-950 dark:text-stone-100">{latestVersion}</div>
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <span className="text-base font-semibold text-stone-950 dark:text-stone-100">{latestVersion}</span>
+                            {updateTag}
+                        </div>
                     </div>
                 </div>
+                {isDesktopUpdate ? (
+                    <div className="mb-5 rounded-lg border border-stone-200 bg-stone-50 p-3 dark:border-stone-800 dark:bg-stone-950/60">
+                        {updatePhase === "available" ? (
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                    <div className="text-sm font-medium">{t("version.updateAvailableHint", { version: latestVersion })}</div>
+                                    <div className="mt-0.5 text-xs text-stone-500 dark:text-stone-400">{t("version.downloadHint")}</div>
+                                </div>
+                                <Button type="primary" onClick={() => void downloadUpdate()}>
+                                    {t("version.download")}
+                                </Button>
+                            </div>
+                        ) : isDownloading ? (
+                            <div>
+                                <div className="flex items-center justify-between gap-3 text-xs text-stone-500 dark:text-stone-400">
+                                    <span>{t("version.downloading")}</span>
+                                    <span>
+                                        {Math.round(updateProgress?.percent || 0)}%{updateProgress?.bytesPerSecond ? ` · ${formatBytes(updateProgress.bytesPerSecond)}/s` : ""}
+                                    </span>
+                                </div>
+                                <Progress className="!mb-0 mt-2" percent={Math.round(updateProgress?.percent || 0)} showInfo={false} />
+                            </div>
+                        ) : isDownloaded ? (
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                    <div className="text-sm font-medium">{t("version.downloadedHint")}</div>
+                                    <div className="mt-0.5 text-xs text-stone-500 dark:text-stone-400">{t("version.installHint")}</div>
+                                </div>
+                                <Button type="primary" onClick={installUpdate}>
+                                    {t("version.restartInstall")}
+                                </Button>
+                            </div>
+                        ) : updatePhase === "error" ? (
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div className="min-w-0 text-xs text-red-600 dark:text-red-300">{updateError || t("version.updateFailed")}</div>
+                                <Button size="small" onClick={() => void checkLatestRelease(true)}>
+                                    {t("version.retry")}
+                                </Button>
+                            </div>
+                        ) : updatePhase === "disabled" ? (
+                            <div className="text-xs leading-5 text-stone-500 dark:text-stone-400">{t("version.desktopOnlyHint")}</div>
+                        ) : updatePhase === "not-available" ? (
+                            <div className="text-xs leading-5 text-stone-500 dark:text-stone-400">{t("version.upToDateHint")}</div>
+                        ) : null}
+                    </div>
+                ) : null}
                 <div className="max-h-[56vh] overflow-y-auto pr-2">
                     <Timeline
                         items={releases.map((release) => ({

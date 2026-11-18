@@ -10,6 +10,7 @@ import { log } from "./services/logger";
 import { startLocalProxy, stopLocalProxy } from "./services/local-proxy";
 import { hasActiveTasks, initTaskService, notifyBackgroundGeneration, showTaskCenter, shutdownTaskService } from "./services/task-service";
 import { createAppTray, destroyAppTray } from "./services/tray";
+import { disposeAutoUpdater, initAutoUpdater } from "./services/updater";
 import { createMainWindow } from "./window";
 
 app.enableSandbox();
@@ -45,6 +46,7 @@ if (!gotSingleInstanceLock) {
     let mainWindow: BrowserWindow | null = null;
     let isQuitting = false;
     let shutdownStarted = false;
+    let updateInstalling = false;
     let lastCrashDialogAt = 0;
 
     const showMainWindow = () => {
@@ -107,6 +109,24 @@ if (!gotSingleInstanceLock) {
             quit: () => app.quit(),
         });
 
+        initAutoUpdater({
+            beforeInstall: async () => {
+                updateInstalling = true;
+                isQuitting = true;
+                await shutdownTaskService().catch((error) => log.error("Failed to prepare task queue for update", error));
+                stopLocalProxy();
+                destroyAppTray();
+                // If the updater could not start the installer, do not leave the
+                // window permanently in a "quitting" state.
+                setTimeout(() => {
+                    if (!mainWindow || mainWindow.isDestroyed()) return;
+                    updateInstalling = false;
+                    isQuitting = false;
+                    log.warn("Update installer did not quit the app; resetting quit state");
+                }, 30_000).unref?.();
+            },
+        });
+
         app.on("activate", () => {
             if (BrowserWindow.getAllWindows().length === 0) {
                 mainWindow = createMainWindow();
@@ -125,6 +145,11 @@ if (!gotSingleInstanceLock) {
 
     app.on("before-quit", (event) => {
         isQuitting = true;
+        if (updateInstalling) {
+            disposeAutoUpdater();
+            log.info("Quitting to install an update");
+            return;
+        }
         if (shutdownStarted) return;
         shutdownStarted = true;
         log.info("Application quitting");
@@ -132,6 +157,7 @@ if (!gotSingleInstanceLock) {
         void shutdownTaskService()
             .catch((error) => log.error("Failed to shut down task service", error))
             .finally(() => {
+                disposeAutoUpdater();
                 stopLocalProxy();
                 destroyAppTray();
                 app.quit();

@@ -53,6 +53,19 @@ const bridge: UnleashlyBridge = {
         openCrashes: () => ipcRenderer.invoke(IPC.diagnosticsOpenCrashes),
         reportCrash: (report) => ipcRenderer.invoke(IPC.diagnosticsReportCrash, report),
     },
+    updates: {
+        status: () => ipcRenderer.invoke(IPC.updatesStatus),
+        check: () => ipcRenderer.invoke(IPC.updatesCheck),
+        download: () => ipcRenderer.invoke(IPC.updatesDownload),
+        install: () => ipcRenderer.invoke(IPC.updatesInstall),
+        onStatus: (callback) => {
+            const listener = (_event: Electron.IpcRendererEvent, status: Parameters<typeof callback>[0]) => callback(status);
+            ipcRenderer.on(IPC.updatesChanged, listener);
+            return () => {
+                ipcRenderer.off(IPC.updatesChanged, listener);
+            };
+        },
+    },
     tasks: {
         enqueue: (request) => ipcRenderer.invoke(IPC.tasksEnqueue, request),
         list: (filter) => ipcRenderer.invoke(IPC.tasksList, filter),
