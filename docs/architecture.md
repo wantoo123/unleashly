@@ -262,3 +262,12 @@ crash-reports/<timestamp>-<id>.json
     - `src/shared`
     - `src/renderer/src/platform`
 - 大规模业务重构（例如拆分 `pages/canvas/project.tsx`）建议在上游同步节奏稳定后单独进行。
+
+## 12. 自动更新
+
+- 主进程通过 `electron-updater` 读取安装包内的 `resources/app-update.yml`，从 GitHub Releases 获取 `latest.yml`。
+- `electron-builder.yml` 的 `publish` 配置指向 `wantoo123/unleashly`；仓库公开后更新检查不需要 token。
+- 更新流程：启动后 10 秒静默检查 → 每 6 小时检查 → 用户下载 → 下载进度 → 重启安装。
+- 下载和安装由用户确认，不自动下载；安装前会先关闭任务队列并保存状态，再调用 `quitAndInstall`。
+- 主进程通过 `updates:*` IPC 和 `updates:changed` 事件把状态同步给渲染层；版本弹窗展示版本、进度、错误和操作按钮。
+- `v0.2.2` 是第一个内置自动更新配置的版本；`v0.2.1` 及更早版本需要手动安装一次 `v0.2.2`。
