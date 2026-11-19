@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.3 - 2026-11-19
+
+- [调整] 启用新版品牌 Logo 与应用图标，统一侧栏、favicon、托盘、窗口和安装包视觉。
+- [新增] 打包资源包含 Windows ICO、macOS ICNS、1024px PNG 与矢量源文件。
+- [调整] Electron Builder 分别指定 Windows、macOS 和 Linux 图标。
+
 ## 0.2.2 - 2026-11-18
 
 - [新增] 基于 GitHub Releases 的桌面自动更新：检查更新、下载安装包、重启安装。

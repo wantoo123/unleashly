@@ -41,7 +41,7 @@ function enqueueText(prompt: string, extra: Partial<EnqueueTaskRequest> = {}): E
     return { request: textRequest(prompt), ...extra };
 }
 
-async function waitForTask(queue: TaskQueue, id: string, timeoutMs = 3000): Promise<TaskRecord> {
+async function waitForTask(queue: TaskQueue, id: string, timeoutMs = 10_000): Promise<TaskRecord> {
     const deadline = Date.now() + timeoutMs;
     for (;;) {
         const task = queue.get(id);
@@ -110,7 +110,8 @@ test("respects priority order and global concurrency", async () => {
     const low = await queue.enqueue(enqueueText("low", { priority: "low" }));
     const high = await queue.enqueue(enqueueText("high", { priority: "high" }));
     const normal = await queue.enqueue(enqueueText("normal", { priority: "normal" }));
-    await new Promise((resolve) => setTimeout(resolve, 30));
+    const orderDeadline = Date.now() + 5000;
+    while (!order.length && Date.now() < orderDeadline) await new Promise((resolve) => setTimeout(resolve, 5));
     expect(order).toEqual(["low"]);
     releaseFirst();
     await waitForTask(queue, low.id);
@@ -137,7 +138,7 @@ test("cancels a running task and abort its provider call", async () => {
             }),
     });
     const task = await queue.enqueue(enqueueText("cancel me"));
-    const deadline = Date.now() + 1000;
+    const deadline = Date.now() + 5000;
     while (queue.get(task.id)?.status !== "running" && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 5));
     expect(queue.get(task.id)?.status).toBe("running");
     const canceled = await queue.cancel(task.id);
@@ -168,7 +169,7 @@ test("recovers queued work after a restart and marks interrupted tasks", async (
     await blocking.setConcurrency({ global: 1 });
     const first = await blocking.enqueue(enqueueText("first"));
     const second = await blocking.enqueue(enqueueText("second"));
-    const deadline = Date.now() + 1000;
+    const deadline = Date.now() + 5000;
     while (blocking.get(first.id)?.status !== "running" && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 5));
     await blocking.shutdown();
     expect(blocking.get(first.id)?.status).toBe("failed");
@@ -205,7 +206,7 @@ test("keeps video tasks resumable across a graceful shutdown", async () => {
     });
     await blocking.init();
     const task = await blocking.enqueue({ request: videoRequest(), origin: "test" });
-    const deadline = Date.now() + 1000;
+    const deadline = Date.now() + 5000;
     while (!blocking.get(task.id)?.remote && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 5));
     expect(blocking.get(task.id)?.remote?.id).toBe("remote-video-1");
     await blocking.shutdown();

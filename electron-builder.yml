@@ -16,6 +16,7 @@ asar: true
 asarUnpack:
     - resources/**
 win:
+    icon: resources/icon.ico
     target:
         - nsis
     artifactName: ${productName}-${version}-${arch}.${ext}
@@ -24,11 +25,13 @@ nsis:
     allowToChangeInstallationDirectory: true
     createDesktopShortcut: true
 mac:
+    icon: resources/icon.icns
     target:
         - dmg
     category: public.app-category.graphics-design
     artifactName: ${productName}-${version}-${arch}.${ext}
 linux:
+    icon: resources/icon.png
     target:
         - AppImage
     category: Graphics

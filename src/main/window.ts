@@ -40,6 +40,7 @@ export function createMainWindow(): BrowserWindow {
         backgroundColor: "#181715",
         autoHideMenuBar: false,
         title: "Unleashly",
+        ...(app.isPackaged ? {} : { icon: join(__dirname, "../../resources/icon.png") }),
         // Windows/Linux use a fully custom title bar. macOS keeps its native traffic
         // lights and only hides the title bar, which is the platform convention.
         ...(isMac ? { titleBarStyle: "hiddenInset" as const } : { frame: false, thickFrame: true }),

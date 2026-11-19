@@ -61,13 +61,7 @@ export function DesktopSidebar({ collapsed, onToggle }: DesktopSidebarProps) {
         <aside className={cn("flex h-full shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200", collapsed ? "w-16" : "w-[228px]")}>
             <div className={cn("app-drag flex h-14 shrink-0 items-center border-b border-sidebar-border", collapsed ? "justify-center px-0" : platform === "darwin" ? "pl-[84px] pr-4" : "px-4")}>
                 <Link to="/" className="app-no-drag flex min-w-0 items-center gap-2.5" title={t("meta.title")}>
-                    <span
-                        className="size-6 shrink-0 bg-foreground"
-                        style={{
-                            mask: "url(/logo.svg) center / contain no-repeat",
-                            WebkitMask: "url(/logo.svg) center / contain no-repeat",
-                        }}
-                    />
+                    <img src="/logo.svg" alt="" className="size-6 shrink-0" />
                     {!collapsed ? <span className="truncate text-sm font-semibold tracking-tight">{t("meta.title")}</span> : null}
                 </Link>
             </div>
