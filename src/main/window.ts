@@ -1,12 +1,21 @@
 import { app, BrowserWindow, session, shell } from "electron";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 import { IPC } from "@shared/ipc";
 import { recordCrash } from "./services/crash-reports";
-import { scopedLogger } from "./services/logger";
+import { log, scopedLogger } from "./services/logger";
 
 const ALLOWED_PERMISSIONS = new Set(["clipboard-read", "clipboard-sanitized-write", "notifications"]);
 const rendererLog = scopedLogger("renderer");
+
+function resolveWindowIcon() {
+    const fileName = process.platform === "win32" ? "icon.ico" : "icon.png";
+    const candidates = app.isPackaged ? [join(process.resourcesPath, fileName)] : [join(__dirname, "../../resources", fileName), join(process.cwd(), "resources", fileName)];
+    const icon = candidates.find((path) => existsSync(path));
+    if (!icon) log.warn("Window icon not found", { candidates });
+    return icon;
+}
 
 function isInternalUrl(url: string) {
     const devUrl = process.env.ELECTRON_RENDERER_URL;
@@ -40,7 +49,7 @@ export function createMainWindow(): BrowserWindow {
         backgroundColor: "#181715",
         autoHideMenuBar: false,
         title: "Unleashly",
-        ...(app.isPackaged ? {} : { icon: join(__dirname, "../../resources/icon.png") }),
+        icon: resolveWindowIcon(),
         // Windows/Linux use a fully custom title bar. macOS keeps its native traffic
         // lights and only hides the title bar, which is the platform convention.
         ...(isMac ? { titleBarStyle: "hiddenInset" as const } : { frame: false, thickFrame: true }),

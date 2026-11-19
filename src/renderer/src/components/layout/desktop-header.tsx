@@ -31,7 +31,9 @@ export function DesktopHeader() {
                         <MenuIcon className="size-4" />
                     </button>
                 ) : null}
-                <h1 className="truncate text-sm font-semibold tracking-tight">{pageTitle}</h1>
+                <h1 className="truncate text-sm font-semibold tracking-tight" style={{ margin: 0 }}>
+                    {pageTitle}
+                </h1>
                 <span className="hidden rounded-full border border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline">{t("desktop.header.local")}</span>
             </div>
             <div className="app-no-drag flex h-full shrink-0 items-center gap-1 pl-1">

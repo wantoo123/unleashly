@@ -12,6 +12,11 @@ files:
     - out/**/*
     - package.json
     - LICENSE
+extraResources:
+    - from: resources/icon.ico
+      to: icon.ico
+    - from: resources/icon.png
+      to: icon.png
 asar: true
 asarUnpack:
     - resources/**
