@@ -1,6 +1,6 @@
 {
     "name": "unleashly",
-    "version": "0.2.4",
+    "version": "0.2.5",
     "description": "Local-first AI visual creation workbench",
     "private": true,
     "main": "./out/main/index.js",

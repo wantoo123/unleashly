@@ -22,14 +22,11 @@ const previewUrls = new Map<string, string>();
 const previewListeners = new Set<() => void>();
 let previewRevision = 0;
 let previewQueue: Promise<unknown> = Promise.resolve();
-const IMAGE_PREVIEW_VERSION = 1;
 const IMAGE_DOWNLOAD_TIMEOUT_MS = 10 * 60_000;
 const IMAGE_REMOTE_LOAD_TIMEOUT_MS = 10 * 60_000;
 const IMAGE_DECODE_TIMEOUT_MS = 10_000;
 const IMAGE_RESPONSE_ERROR = "ImageResponseError";
 const IMAGE_TIMEOUT_ERROR = "ImageTimeoutError";
-
-type StoredImagePreview = { version: number; blob?: Blob };
 
 type ImageReadOptions = { signal?: AbortSignal };
 
@@ -175,8 +172,9 @@ export async function ensureImagePreview(storageKey?: string) {
     if (!storageKey) return undefined;
     const cached = previewUrls.get(storageKey);
     if (cached) return cached;
-    const stored = await previewStore.getItem<StoredImagePreview>(storageKey).catch(() => null);
-    if (stored?.version === IMAGE_PREVIEW_VERSION) return stored.blob ? cacheImagePreview(storageKey, stored.blob) : undefined;
+    const stored = await previewStore.getItem<unknown>(storageKey).catch(() => null);
+    if (stored instanceof Blob) return cacheImagePreview(storageKey, stored);
+    if (stored !== null && stored !== undefined) await previewStore.removeItem(storageKey).catch(() => undefined);
     queueImagePreview(storageKey);
     return undefined;
 }
@@ -193,8 +191,12 @@ function queueImagePreview(storageKey: string) {
 
 async function storeImagePreview(storageKey: string, original: Blob) {
     const preview = await createImageThumbnail(original).catch(() => undefined);
-    await previewStore.setItem<StoredImagePreview>(storageKey, { version: IMAGE_PREVIEW_VERSION, blob: preview }).catch(() => undefined);
-    return preview ? cacheImagePreview(storageKey, preview) : undefined;
+    if (!preview) {
+        await previewStore.removeItem(storageKey).catch(() => undefined);
+        return undefined;
+    }
+    await previewStore.setItem(storageKey, preview).catch(() => undefined);
+    return cacheImagePreview(storageKey, preview);
 }
 
 function cacheImagePreview(storageKey: string, preview: Blob) {
