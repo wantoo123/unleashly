@@ -14,7 +14,10 @@ import { disposeAutoUpdater, initAutoUpdater } from "./services/updater";
 import { createMainWindow } from "./window";
 
 app.enableSandbox();
-app.setAppUserModelId("ai.unleashly.app");
+// Keep development runs out of the production AUMID. Otherwise the Electron
+// dev binary can register a Start Menu/taskbar identity that overrides the
+// installed app's icon and grouping.
+app.setAppUserModelId(app.isPackaged ? "ai.unleashly.app" : "ai.unleashly.app.dev");
 registerAppScheme();
 
 // Native crashpad collection starts before any window exists. Uploads are disabled:

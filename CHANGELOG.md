@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- [修复] 开发环境改用独立的 AppUserModelID，避免 Electron 开发版与安装版共用 AUMID 导致任务栏图标被覆盖。
+
 ## 0.2.4 - 2026-11-19
 
 - [修复] 侧栏 Logo 与「Unleashly」品牌文字垂直对齐。
